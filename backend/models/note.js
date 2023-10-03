@@ -1,12 +1,13 @@
 const mongoose = require("mongoose");
-const MONGODB_URI = process.env.MONGODB_URI;
+const config = require("../utils/config");
+const logger = require("../utils/logger");
 
 mongoose.set("strictQuery", false);
 
 mongoose
-  .connect(MONGODB_URI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((e) => console.log("Error connecting to MongoDB", e.message));
+  .connect(config.MONGODB_URI)
+  .then(() => logger.info("Connected to MongoDB"))
+  .catch((e) => logger.info("Error connecting to MongoDB", e.message));
 
 const noteSchema = new mongoose.Schema({
   content: { type: String, minLength: 5, required: true },
