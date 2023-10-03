@@ -20,10 +20,16 @@ const App = () => {
     });
   }, []);
 
-  const showSuccessMessage = () => {
-    setSuccessMessage(`Added ${returnedNote.content}`);
+  const showSuccessMessage = (note) => {
+    setSuccessMessage(`Added ${note.content}`);
     setTimeout(() => {
       setSuccessMessage("");
+    }, 5000);
+  };
+  const showErrorMessage = (message) => {
+    setErrorMessage(`Error: ${message}`);
+    setTimeout(() => {
+      setErrorMessage("");
     }, 5000);
   };
 
@@ -33,12 +39,18 @@ const App = () => {
       content: newNote,
       important: Math.random() < 0.5,
     };
-    noteService.create(noteObject).then((returnedNote) => {
-      console.log(returnedNote);
-      setNotes(notes.concat(returnedNote));
-      setNewNote("");
-      showSuccessMessage();
-    });
+    noteService
+      .create(noteObject)
+      .then((returnedNote) => {
+        console.log(returnedNote);
+        setNotes(notes.concat(returnedNote));
+        setNewNote("");
+        showSuccessMessage(returnedNote);
+      })
+      .catch((e) => {
+        console.log(e);
+        showErrorMessage(e.response.data.error);
+      });
   };
 
   const handleNoteChange = (e) => {
@@ -53,7 +65,7 @@ const App = () => {
       .then((returnedNote) => {
         console.log(returnedNote);
         const updatedNotes = notes.map((note) =>
-          note.id === id ? changedNote : note
+          note.id === id ? returnedNote : note
         );
         console.log(updatedNotes);
         setNotes(updatedNotes);
