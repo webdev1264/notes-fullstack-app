@@ -53,6 +53,18 @@ app.post("/api/notes/", (req, res) => {
   });
 });
 
+app.put("/api/notes/:id", (req, res) => {
+  const id = req.params.id;
+  const updatedNote = req.body;
+  Note.findByIdAndUpdate(id, updatedNote)
+    .then((returnedNote) => {
+      res.json(returnedNote);
+    })
+    .catch((e) => {
+      res.status(500).json({ error: "Bad request", message: e.message });
+    });
+});
+
 app.use((req, res) => {
   res.status(404).json({ error: "Unknown endpoint." });
 });

@@ -26,7 +26,7 @@ const App = () => {
       setSuccessMessage("");
     }, 5000);
   };
-  
+
   const addNote = (event) => {
     event.preventDefault();
     const noteObject = {
@@ -53,8 +53,9 @@ const App = () => {
       .then((returnedNote) => {
         console.log(returnedNote);
         const updatedNotes = notes.map((note) =>
-          note.id === id ? returnedNote : note
+          note.id === id ? changedNote : note
         );
+        console.log(updatedNotes);
         setNotes(updatedNotes);
       })
       .catch((error) => {
