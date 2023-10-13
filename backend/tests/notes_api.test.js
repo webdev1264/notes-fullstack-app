@@ -8,7 +8,13 @@ const Note = require("../models/note");
 
 beforeEach(async () => {
   await Note.deleteMany({});
-  await Note.insertMany(helper.initialNotes);
+  // easier way to save multiple objects in MongoDB
+  // await Note.insertMany(helper.initialNotes);
+
+  //More sophisticated way to save the objects, but used for demonstration purposes (Promise.all())
+  const notesList = helper.initialNotes.map((note) => new Note(note));
+  const promisesList = notesList.map((note) => note.save());
+  await Promise.all(promisesList);
 });
 
 test("notes are returned in JSON", async () => {

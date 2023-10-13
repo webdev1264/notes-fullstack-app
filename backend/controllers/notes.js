@@ -53,20 +53,20 @@ notesRouter.post("/", async (req, res, next) => {
   }
 });
 
-notesRouter.put("/:id", (req, res, next) => {
+notesRouter.put("/:id", async (req, res, next) => {
   const id = req.params.id;
   const updatedNote = req.body;
-  Note.findByIdAndUpdate(id, updatedNote, {
-    new: true,
-    runValidators: true,
-    context: "query",
-  }) //option {new:true} is used to return the modified object(returnedNote). runValidators and context are required for validation check (see noteSchema)
-    .then((returnedNote) => {
-      res.json(returnedNote);
-    })
-    .catch((e) => {
-      next(e);
-    });
+  try {
+    const returnedNote = await Note.findByIdAndUpdate(id, updatedNote, {
+      new: true,
+      runValidators: true,
+      context: "query",
+    }); //option {new:true} is used to return the modified object(returnedNote). runValidators and context are required for validation check (see noteSchema)
+
+    res.json(returnedNote);
+  } catch (e) {
+    next(e);
+  }
 });
 
 module.exports = notesRouter;
