@@ -3,8 +3,10 @@ import AddNote from "./components/AddNote";
 import Notes from "./components/Notes";
 import ShowAll from "./components/ShowAll";
 import noteService from "./services/notes";
+import loginService from "./services/login";
 import Notification from "./components/Notification";
 import Footer from "./components/Footer";
+import Form from "./components/Form";
 
 const App = () => {
   const [notes, setNotes] = useState([]);
@@ -12,26 +14,45 @@ const App = () => {
   const [showAll, setShowAll] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [userName, setUserName] = useState("");
+  const [password, setPassword] = useState("");
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    noteService.getAll().then((initialNotes) => {
-      console.log(initialNotes);
-      setNotes(initialNotes);
-    });
+    const fetchData = async () => {
+      try {
+        const initialNotes = await noteService.getAll();
+        setNotes(initialNotes);
+      } catch (e) {
+        console.log(e);
+        showErrorMessage(`No content. ${e.message}`);
+      }
+    };
+    fetchData();
   }, []);
 
-  const showSuccessMessage = (note) => {
+  useEffect(() => {
+    const loggedUserJSON = localStorage.getItem("loggedUser");
+    if (loggedUserJSON) {
+      const userData = JSON.parse(loggedUserJSON);
+      setUser(userData);
+      noteService.setToken(userData.token);
+    }
+  }, []);
+
+  function showSuccessMessage(note) {
     setSuccessMessage(`Added ${note.content}`);
     setTimeout(() => {
       setSuccessMessage("");
     }, 5000);
-  };
-  const showErrorMessage = (message) => {
+  }
+
+  function showErrorMessage(message) {
     setErrorMessage(`Error: ${message}`);
     setTimeout(() => {
       setErrorMessage("");
     }, 5000);
-  };
+  }
 
   const addNote = (event) => {
     event.preventDefault();
@@ -59,7 +80,11 @@ const App = () => {
 
   const toggleImportance = (id) => {
     const note = notes.find((note) => note.id === id);
-    const changedNote = { ...note, important: !note.important };
+    const changedNote = {
+      ...note,
+      user: note.user.id,
+      important: !note.important,
+    };
     noteService
       .update(id, changedNote)
       .then((returnedNote) => {
@@ -79,19 +104,55 @@ const App = () => {
       });
   };
 
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    try {
+      const userData = await loginService.login({ userName, password });
+      noteService.setToken(userData.token);
+      setUser(userData);
+      localStorage.setItem("loggedUser", JSON.stringify(userData));
+    } catch (e) {
+      console.log(e.message);
+      showErrorMessage("Wrong credentials");
+    } finally {
+      setUserName("");
+      setPassword("");
+    }
+  };
+
+  const loginForm = () => (
+    <Form
+      handleLogin={handleLogin}
+      userName={userName}
+      password={password}
+      setUserName={setUserName}
+      setPassword={setPassword}
+    />
+  );
+
+  const noteForm = () => (
+    <AddNote
+      addNote={addNote}
+      newNote={newNote}
+      handleNoteChange={handleNoteChange}
+    />
+  );
+
   const notesToShow = showAll ? notes : notes.filter((note) => note.important);
   return (
     <div>
       <h1>Notes</h1>
       <Notification message={errorMessage} className="error" />
       <Notification message={successMessage} className="success" />
+      {!user && loginForm()}
+      {user && (
+        <div>
+          <p>{user.name} logged in</p>
+          {noteForm()}
+        </div>
+      )}
       <ShowAll showAll={showAll} handleShow={() => setShowAll(!showAll)} />
       <Notes notesToShow={notesToShow} toggleImportance={toggleImportance} />
-      <AddNote
-        addNote={addNote}
-        newNote={newNote}
-        handleNoteChange={handleNoteChange}
-      />
       <Footer />
     </div>
   );
